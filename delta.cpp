@@ -23,12 +23,20 @@ uint decode_data(uint *encode, uint index, uint mode);           // 由于分为
 
 int main()
 {
+    ofstream test("gap.txt", ios_base::trunc);
+    uint *data = new uint[count]();
+    get_gap(data);
+    for(int i = 0; i < count ; i++)
+    {
+        test << data[i] << endl;
+    }
+    test.close();
     return 0;
 }
 
 void get_gap(uint *gap)
 {
-    ifstream load_data("F:\\gamma\\data.txt");
+    ifstream load_data("data.txt");
     int temp = 0, pre = 0, i = 1;
     load_data >> temp;
     gap[0] = temp;
@@ -43,7 +51,7 @@ void get_gap(uint *gap)
 
 void get_data(uint *data)
 {
-    ifstream load_data("F:\\gamma\\data.txt");
+    ifstream load_data("data.txt");
     uint temp = 0, i = 0;
     while (load_data >> temp)
     {
