@@ -17,6 +17,8 @@ uint get_high_bits(uint sub, int num);                           // 获取数字
 uint get_bits(uint sub, int low, int high);                      // 获取数字从low位到high位的数字
 void encode_gamma(uint num, uint *encode, uint &p, uint &shift); // 对数字num进行gamma编码
 void encode_delta(uint *data, uint *encode);                     // 对于数据进行delta编码
+uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
+uint decode_delta(uint *encode, uint index);                     // 解delta编码
 
 int main()
 {
@@ -157,3 +159,21 @@ void encode_delta(uint *data, uint *encode) {
         }
     }
 }
+
+uint decode_gamma(uint *encode, uint &p, uint &shift)
+{
+    if(shift == 0) {
+        p++;
+        shift = 32;
+    }
+    uint num = 0;
+    while(1) {
+        // 判断连续0的个数
+        
+    }
+}
+
+uint decode_delta(uint *encode, uint index)
+{
+
+}               
