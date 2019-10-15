@@ -75,16 +75,8 @@ uint set_high_bits0(uint sub, int num)
 
 uint get_high_bits(uint sub, int num)
 {
-    uint temp = (1U << ((int)floor(log(sub) / log(2)) + 1)) - 1;
-    uint length_temp = (int)floor(log(temp) / log(2)) + 1 - num;
-    if (length_temp < 0)
-        // 比方说一共有4位，要求取最高的5位，返回-1，表示超限
-        return -1;
-    temp = temp >> length_temp;
-    temp = temp << length_temp;
-    sub &= temp;
-    sub = sub >> length_temp;
-    return sub;
+    uint length_shift = (int)floor(log(sub) / log(2)) + 1 - num;
+    return sub >> length_shift;
 }
 
 void encode_gamma(uint num, uint *encode, uint& p, uint& shift) {
