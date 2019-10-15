@@ -212,5 +212,19 @@ uint decode_data(uint *encode, uint index, uint mode)
     // encode表示编码序列
     // index表示需要解码的数所在位置
     // mode表示数据对应关系，1:严格递增数列;2:随机数列;3:区间递增数列;
-    
+    uint p = 0, shift = 32, res = 0;
+    switch(mode) {
+        case 1:
+
+            break;
+        case 2:
+
+            break;
+        case 3:
+
+            break;
+        default :
+            cout << "无效的模式!" << endl;
+    }
+    return res;
 }
