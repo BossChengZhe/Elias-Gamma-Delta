@@ -13,7 +13,8 @@ void get_data(uint *data);                                       // 获取完整
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
 uint calculate_space(uint *data);                                // 计算编码空间
 uint set_high_bits0(uint sub, int num);                          // 数字高num位置0
-uint get_high_bits(uint sub, int num);                           // 高位置零
+uint get_high_bits(uint sub, int num);                           // 获取数字高num位
+uint get_bits(uint sub, int low, int high);                      // 获取数字从low位到high位的数字
 void encode_gamma(uint num, uint *encode, uint &p, uint &shift); // 对数字num进行gamma编码
 void encode_delta(uint *data, uint *encode);                     // 对于数据进行delta编码
 
@@ -130,7 +131,14 @@ void encode_delta(uint *data, uint *encode) {
         }
         encode_gamma(data[i], encode, p, shift);
         uint length_data = calculate_bits(data[i]) - 1;
-        uint high_bits = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
+        uint temp = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
         
+        if(shift >= length_data) {
+            shift -= length_data;
+            encode[p] |= temp << shift;
+        }
+        else {
+            
+        }
     }
 }
