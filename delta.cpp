@@ -23,11 +23,6 @@ uint decode_data(uint *encode, uint index, uint mode);           // 由于分为
 
 int main()
 {
-    uint x = 0;
-    cin >> x;
-    cout << bitset<32>(x) << endl;
-    x <<= 2;
-    cout << bitset<32>(x) << endl;
     return 0;
 }
 
@@ -200,12 +195,22 @@ uint decode_delta(uint *encode, uint &p, uint &shift)
     uint num_bits = decode_gamma(encode, p, shift);
     for(int i = 0; i < num_bits - 1; i++)
     {
+        if(shift == 0) {
+            p++;
+            shift = 32;
+        }
         res <<= 1;
-
+        uint temp = encode[p] & (1U << (shift - 1));
+        res |= temp >> (shift - 1);
+        shift--;
     }
+    return shift;
 }              
 
 uint decode_data(uint *encode, uint index, uint mode)
 {
-
+    // encode表示编码序列
+    // index表示需要解码的数所在位置
+    // mode表示数据对应关系，1:严格递增数列;2:随机数列;3:区间递增数列;
+    
 }
