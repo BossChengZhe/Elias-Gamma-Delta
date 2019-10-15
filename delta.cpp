@@ -23,8 +23,8 @@ int main()
     uint x = 0;
     cin >> x;
     cout << bitset<32>(x) << endl;
-    x = get_high_bits(x, 5);
-    cout << x << endl;
+    x = get_bits(x, 3, 7);
+    cout << bitset<32>(x) << endl;
     return 0;
 }
 
@@ -147,7 +147,13 @@ void encode_delta(uint *data, uint *encode) {
             encode[p] |= temp << shift;
         }
         else {
-            
+            uint bits = get_bits(temp, length_data - shift + 1, length_data);
+            encode[p++] |= bits;
+            bits = get_bits(temp, 1, length_data - shift);
+            length_data -= shift;
+            shift = 32;
+            shift -= length_data;
+            encode[p] |= bits << shift;
         }
     }
 }
