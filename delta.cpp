@@ -19,14 +19,14 @@ void encode_gamma(uint num, uint *encode, uint &p, uint &shift); // 对数字num
 void encode_delta(uint *data, uint *encode);                     // 对于数据进行delta编码
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
 uint decode_delta(uint *encode, uint &p, uint &shift);           // 解delta编码
-uint decode_data(uint *encode, uint index);                      // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
+uint decode_data(uint *encode, uint index, uint mode);           // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
 
 int main()
 {
     uint x = 0;
     cin >> x;
     cout << bitset<32>(x) << endl;
-    x = get_bits(x, 3, 7);
+    x <<= 2;
     cout << bitset<32>(x) << endl;
     return 0;
 }
@@ -196,10 +196,16 @@ uint decode_gamma(uint *encode, uint &p, uint &shift)
 
 uint decode_delta(uint *encode, uint &p, uint &shift)
 {
+    uint res = 1;
+    uint num_bits = decode_gamma(encode, p, shift);
+    for(int i = 0; i < num_bits - 1; i++)
+    {
+        res <<= 1;
 
+    }
 }              
 
-uint decode_data(uint *encode, uint index)
+uint decode_data(uint *encode, uint index, uint mode)
 {
 
 }
