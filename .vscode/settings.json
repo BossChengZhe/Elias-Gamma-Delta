@@ -35,6 +35,7 @@
         "iostream": "cpp",
         "ostream": "cpp",
         "cmath": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "new": "cpp"
     } // 效果效果比cpptools要好
 }

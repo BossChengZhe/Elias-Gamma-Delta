@@ -16,10 +16,10 @@ unsigned int decode_gamma(unsigned int *encode, int subscript);    // è§£gammaç¼
 
 int main() {
     ifstream data("C:\\Homework\\Code\\data.txt");
-    int *orginal_data = new int[count]();
+    int *original_data = new int[count]();
     int mid=0, lo = 0;
     while(data >> mid) {
-        orginal_data[lo++] = mid;
+        original_data[lo++] = mid;
     }
     data.close();
 
@@ -32,7 +32,7 @@ int main() {
     int flag = 0;
     for(int i = 0; i < count ; i++)
     {
-        if(orginal_data[i] == decode_gamma(encode, i+1))
+        if(original_data[i] == decode_gamma(encode, i+1))
             flag++;
         else
             cout << "there is something wrong:" << i << endl;
@@ -40,7 +40,7 @@ int main() {
     cout << flag << endl;
     delete[] gap;
     delete[] encode;
-    delete[] orginal_data;
+    delete[] original_data;
     return 0;
 }
 
