@@ -23,14 +23,25 @@ uint decode_data(uint *encode, uint index, uint mode);           // 由于分为
 
 int main()
 {
-    ofstream test("gap.txt", ios_base::trunc);
+    ofstream test("result.txt", ios::trunc);
+    ofstream gap("gap.txt", ios::trunc);
     uint *data = new uint[count]();
     get_gap(data);
     for(int i = 0; i < count ; i++)
     {
-        test << data[i] << endl;
+        gap << data[i] << endl;
+    }
+    uint sum_space = calculate_space(data);
+    uint *encode = new uint[sum_space]();
+    encode_delta(data, encode);
+    for(int i = 0; i < 20 ; i++)
+    {
+        test << bitset<32>(encode[i]) << endl;
     }
     test.close();
+    gap.close();
+    delete[] data;
+    delete[] encode;
     return 0;
 }
 
@@ -138,13 +149,13 @@ void encode_gamma(uint num, uint *encode, uint& p, uint& shift) {
 
 void encode_delta(uint *data, uint *encode) {
     uint p = 0, shift = 32;
-    for(int i = 0; i < count ; i++)
+    for(int i = 0; i < 20 ; i++)
     {
         if(shift == 0) {
             p++;
             shift = 32;
         }
-        encode_gamma(data[i], encode, p, shift);
+        encode_gamma(calculate_bits(data[i]), encode, p, shift);
         uint length_data = calculate_bits(data[i]) - 1;
         uint temp = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
         
