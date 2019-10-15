@@ -19,7 +19,11 @@ void encode_delta(uint *data, uint *encode);                     // 对于数据
 
 int main()
 {
-    uint *data = new uint[count]();
+    uint x = 0;
+    cin >> x;
+    cout << bitset<32>(x) << endl;
+    x = get_high_bits(x, 5);
+    cout << x << endl;
     return 0;
 }
 
@@ -120,7 +124,13 @@ void encode_delta(uint *data, uint *encode) {
     uint p = 0, shift = 32;
     for(int i = 0; i < count ; i++)
     {
+        if(shift == 0) {
+            p++;
+            shift = 32;
+        }
         encode_gamma(data[i], encode, p, shift);
-
+        uint length_data = calculate_bits(data[i]) - 1;
+        uint high_bits = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
+        
     }
 }
