@@ -233,7 +233,7 @@ uint decode_data(uint *encode, uint index, uint mode)
             res = decode_delta(encode, p, shift);
             break;
         case 3:
-
+            cout << "俺还没有写QAQ" << endl;
             break;
         default :
             cout << "无效的模式!" << endl;
