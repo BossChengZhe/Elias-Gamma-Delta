@@ -184,7 +184,7 @@ uint decode_gamma(uint *encode, uint &p, uint &shift)
         temp = temp << 1;
         uint flag = encode[p] & (1U << (shift - 1));
         shift--;
-        temp |= flag;
+        temp |= flag >> shift;
     }
     return temp;
 }
@@ -215,10 +215,22 @@ uint decode_data(uint *encode, uint index, uint mode)
     uint p = 0, shift = 32, res = 0;
     switch(mode) {
         case 1:
-
+            for(int i = 0; i < index ; i++)
+                res += decode_delta(encode, p, shift);
             break;
         case 2:
-
+            for(int i = 0; i < index - 1 ; i++)
+            {
+                // 按照编码流程走一遍，但不出编码结果，只是确定位
+                uint temp = decode_gamma(encode, p, shift);
+                if(temp >= shift) {
+                    p++;
+                    shift = 32 - (temp - shift);
+                }
+                else
+                    shift -= temp;
+            }
+            res = decode_delta(encode, p, shift);
             break;
         case 3:
 
