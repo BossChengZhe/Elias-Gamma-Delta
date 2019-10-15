@@ -18,7 +18,8 @@ uint get_bits(uint sub, int low, int high);                      // 获取数字
 void encode_gamma(uint num, uint *encode, uint &p, uint &shift); // 对数字num进行gamma编码
 void encode_delta(uint *data, uint *encode);                     // 对于数据进行delta编码
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
-uint decode_delta(uint *encode, uint index);                     // 解delta编码
+uint decode_delta(uint *encode, uint &p, uint &shift);           // 解delta编码
+uint decode_data(uint *encode, uint index);                      // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
 
 int main()
 {
@@ -162,18 +163,43 @@ void encode_delta(uint *data, uint *encode) {
 
 uint decode_gamma(uint *encode, uint &p, uint &shift)
 {
-    if(shift == 0) {
-        p++;
-        shift = 32;
-    }
     uint num = 0;
     while(1) {
         // 判断连续0的个数
-        
+        if(shift == 0) {
+            p++;
+            shift = 32;
+        }
+        uint flag = encode[p] & (1U << (shift - 1));
+        shift--;
+        if(flag != 0) {
+            shift++;
+            break;
+        }
+        else
+            num++;
     }
+    uint temp = 0;
+    for(int j = 0; j < num ; j++) {
+        // 解码有效部分
+        if(shift == 0) {
+            p++;
+            shift = 32;
+        }
+        temp = temp << 1;
+        uint flag = encode[p] & (1U << (shift - 1));
+        shift--;
+        temp |= flag;
+    }
+    return temp;
 }
 
-uint decode_delta(uint *encode, uint index)
+uint decode_delta(uint *encode, uint &p, uint &shift)
 {
 
-}               
+}              
+
+uint decode_data(uint *encode, uint index)
+{
+
+}
