@@ -84,6 +84,15 @@ uint get_high_bits(uint sub, int num)
     return sub >> length_shift;
 }
 
+uint get_bits(uint sub, int low, int high)
+{
+    uint low_bits = (1U << (low - 1)) - 1;
+    uint high_bits = (1U << high) - 1;
+    uint temp = high_bits - low_bits;
+    sub &= temp;
+    return sub >> (low - 1);
+}
+
 void encode_gamma(uint num, uint *encode, uint& p, uint& shift) {
     // num为gamma编码的目标数字，encode为存储编码序列的数组，
     // p为序列指针,shift为uint内剩余未存储编码数据的位
