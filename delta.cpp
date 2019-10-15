@@ -8,8 +8,7 @@ using namespace std;
 
 const int count = 1000; // count为数据规模
 
-void get_gap(uint *gap);                                         // 获取数据后项减前项的和
-void get_data(uint *data);                                       // 获取完整数据
+void get_data(uint *data, uint mode);                            // 获取完整数据
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
 uint calculate_space(uint *data);                                // 计算编码空间
 uint set_high_bits0(uint sub, int num);                          // 数字高num位置0
@@ -23,50 +22,70 @@ uint decode_data(uint *encode, uint index, uint mode);           // 由于分为
 
 int main()
 {
-    ofstream test("result.txt", ios::trunc);
-    ofstream gap("gap.txt", ios::trunc);
+    // uint data_mode, decode_mode;
+    // cin >> data_mode >> decode_mode;
+
     uint *data = new uint[count]();
-    get_gap(data);
-    for(int i = 0; i < count ; i++)
-    {
-        gap << data[i] << endl;
-    }
+    get_data(data, 1);
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
     encode_delta(data, encode);
-    for(int i = 0; i < 20 ; i++)
+
+    ofstream test("result.txt", ios_base::trunc);
+    for(int i = 0; i < sum_space ; i++)
     {
         test << bitset<32>(encode[i]) << endl;
     }
     test.close();
-    gap.close();
+
+    get_data(data, 1);
+    uint num = 0;
+    for(int i = 0; i < count ; i++)
+    {
+        uint res = decode_data(encode, i + 1, 2);
+        if(res == data[i])
+            num++;
+        else { 
+            cout << i << endl;
+            break;
+        }
+    }
+    cout << num << endl;
+
     delete[] data;
     delete[] encode;
     return 0;
 }
 
-void get_gap(uint *gap)
+void get_data(uint *data, uint mode)
 {
-    ifstream load_data("data.txt");
-    int temp = 0, pre = 0, i = 1;
-    load_data >> temp;
-    gap[0] = temp;
-    pre = temp;
-    while (load_data >> temp)
-    {
-        gap[i++] = temp - pre;
-        pre = temp;
-    }
-    load_data.close();
-}
-
-void get_data(uint *data)
-{
+    // data储存原始数据的容器
+    // mode表示读取数据的模式,1:求整数之间的gap值;2:直接读取整数;
     ifstream load_data("data.txt");
     uint temp = 0, i = 0;
-    while (load_data >> temp)
-    {
-        data[i++] = temp;
+    switch(mode) {
+        case 1: {
+            while (load_data >> temp)
+            {
+                data[i++] = temp;
+            }
+            break;
+        }  
+        case 2: {
+            i++;
+            uint pre = 0;
+            load_data >> temp;
+            data[0] = temp;
+            pre = temp;
+            while (load_data >> temp)
+            {
+                data[i++] = temp - pre;
+                pre = temp;
+            }
+            break;
+        }
+        default :
+            cout << "invalid mode" << endl;
     }
     load_data.close();
 }
@@ -141,7 +160,7 @@ void encode_gamma(uint num, uint *encode, uint& p, uint& shift) {
         else {
             // 如果剩余空位小于冗余编码长度，则冗余编码长度减去shift后，shift = 32 - k，表示剩余冗余编码长度，指针后移
             p++;
-            shift = 32 - 2 * length_num - 1 + shift;
+            shift = 32 - (length_num - 1 - shift) - length_num;
             encode[p] |= num << shift;
         }
     }
@@ -149,12 +168,13 @@ void encode_gamma(uint num, uint *encode, uint& p, uint& shift) {
 
 void encode_delta(uint *data, uint *encode) {
     uint p = 0, shift = 32;
-    for(int i = 0; i < 20 ; i++)
+    for(int i = 0; i < count ; i++)
     {
         if(shift == 0) {
             p++;
             shift = 32;
         }
+        // cout << data[i] << '\n';
         encode_gamma(calculate_bits(data[i]), encode, p, shift);
         uint length_data = calculate_bits(data[i]) - 1;
         uint temp = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
@@ -172,6 +192,7 @@ void encode_delta(uint *data, uint *encode) {
             shift -= length_data;
             encode[p] |= bits << shift;
         }
+        // cout << bitset<32>(encode[p]) << " " << p << " " << shift << '\n';
     }
 }
 
@@ -194,7 +215,7 @@ uint decode_gamma(uint *encode, uint &p, uint &shift)
             num++;
     }
     uint temp = 0;
-    for(int j = 0; j < num ; j++) {
+    for(int j = 0; j < num + 1 ; j++) {
         // 解码有效部分
         if(shift == 0) {
             p++;
@@ -223,7 +244,7 @@ uint decode_delta(uint *encode, uint &p, uint &shift)
         res |= temp >> (shift - 1);
         shift--;
     }
-    return shift;
+    return res;
 }              
 
 uint decode_data(uint *encode, uint index, uint mode)
@@ -242,20 +263,24 @@ uint decode_data(uint *encode, uint index, uint mode)
             {
                 // 按照编码流程走一遍，但不出编码结果，只是确定位
                 uint temp = decode_gamma(encode, p, shift);
-                if(temp >= shift) {
+                if(temp > shift) {
                     p++;
-                    shift = 32 - (temp - shift);
+                    shift = 32 - (temp - 1 - shift);
+                }
+                else if(temp == shift) {
+                    p++;
+                    shift = 32;
                 }
                 else
-                    shift -= temp;
+                    shift -= (temp - 1);
             }
             res = decode_delta(encode, p, shift);
             break;
         case 3:
-            cout << "俺还没有写QAQ" << endl;
+            cout << "There is no such mode!" << endl;
             break;
         default :
-            cout << "无效的模式!" << endl;
+            cout << "invalid mode!" << endl;
     }
     return res;
 }

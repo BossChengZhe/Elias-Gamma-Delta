@@ -36,6 +36,7 @@
         "ostream": "cpp",
         "cmath": "cpp",
         "ratio": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "iosfwd": "cpp"
     } // 效果效果比cpptools要好
 }
