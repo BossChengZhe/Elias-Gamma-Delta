@@ -6,40 +6,40 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 60000;
+const int count = 25000;
 const int mode_c = 2;
 
 void get_data(uint *data, uint mode);
+uint *get_data_piece(uint *data);                                // 读取区间递增的数据
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
 uint calculate_space(uint *data);                                // 计算编码空间
 uint set_high_bits0(uint sub, int num);                          // 数字高num位置0
 uint get_high_bits(uint sub, int num);                           // 获取数字高num位
 uint get_bits(uint sub, int low, int high);                      // 获取数字从low位到high位的数字
-void encode_gamma(uint *gap, uint *encode, uint &p, uint &shift);// 编码gamma
-uint** encode_gamma_piece(uint *data, uint *encode);             // 编码数据
+void encode_gamma(uint *gap, uint *encode);// 编码gamma
+void encode_gamma_piece(uint *data, uint *encode, uint *infor);  // 编码数据
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解码gamma
 uint decode_data(uint *encode, uint index, uint mode);           // 得到数据
+uint decode_data_piece(uint *encode, uint *infor, uint index);   // 得到区间递增的数据
 
 int main() {
     uint *data = new uint[count]();
-    get_data(data, mode_c);
+    // get_data(data, mode_c);
+    uint* infor = get_data_piece(data);
+
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
 
-    uint p = 0, shift = 32;
-    encode_gamma(data, encode, p, shift);
-    ofstream result("result.txt", ios_base::trunc);
-    for(int i = 0; i < sum_space ; i++)
-    {
-        result << bitset<32>(encode[i]) << endl;
-    }
-    result.close();
+    // encode_gamma(data, encode);
+    encode_gamma_piece(data, encode, infor);
 
     get_data(data, 2);
     int num = 0;
     for(int i = 0; i < count ; i++)
     {
-        if (data[i] == decode_data(encode, i + 1, mode_c))
+        // if (data[i] == decode_data(encode, i + 1, mode_c))
+            // num++;
+        if (data[i] == decode_data_piece(encode, infor, i + 1))
             num++;
         else {
             cout << i << endl;
@@ -47,6 +47,7 @@ int main() {
         }
     }
     cout << num << endl;
+
     delete[] data;
     delete[] encode;
     return 0;
@@ -84,6 +85,42 @@ void get_data(uint *data, uint mode) {
     load_data.close();
 }
 
+uint *get_data_piece(uint *data) {
+    uint temp = 0, i = 0;
+    ifstream load_data("data.txt");
+    while(load_data >> temp) {
+        data[i++] = temp;
+    }
+    load_data.close();
+
+    uint num = 1;                                                // 计算断点的数目，开头的也算，所以num初始值为1
+    for(int i = 0; i < count - 1 ; i++) {
+        // 统计断点个数
+        if(data[i] > data[i + 1]) {
+            num++;
+        }
+    }
+
+    uint *infor = new uint[num * 3 + 1]();
+    infor[0] = num;
+    infor[1] = 0, infor[2] = 0, infor[3] = 0;
+    uint q = 4, pre = data[0], te = pre;
+    for (int i = 0; i < count - 1; i++) {
+        if(pre > data[i+1]) {
+            infor[q++] = i + 1;
+            infor[q++] = 0;
+            infor[q++] = 0;
+            pre = data[i + 1];
+        }
+        else {
+            te = data[i + 1];
+            data[i + 1] -= pre;
+            pre = te;
+        }
+    }
+    return infor;
+}
+
 uint calculate_bits(uint num) {
     // 计算一个数的二进制位数
     return (uint)floor(log(num) / log(2)) + 1;
@@ -117,7 +154,8 @@ uint get_bits(uint sub, int low, int high) {
     return sub >> (low - 1);
 }
 
-void encode_gamma(uint *gap, uint *encode,uint &p, uint &shift) {
+void encode_gamma(uint *gap, uint *encode) {
+    uint p = 0, shift = 32;
     for (int i = 0; i < count; ++i) {
         uint temp = gap[i];
         uint length_redundancy = (int) floor(log(temp) / log(2));   // 编码冗余位的长度，即gamma编码前0串的长度
@@ -175,8 +213,71 @@ void encode_gamma(uint *gap, uint *encode,uint &p, uint &shift) {
     }
 }
 
-uint** encode_gamma_piece(uint *data, uint *encode, uint mode){
+void encode_gamma_piece(uint *data, uint *encode, uint *infor){
+    uint p = 0, shift = 32, q = 1;
+    for(int i = 0; i < count ; i++) {
+        if(infor[q] == i) {
+            // 即当前数据处于断点位置，记录编码指针和整数内部偏移
+            infor[++q] = p;
+            infor[++q] = shift;
+            ++q;
+        }
 
+        uint temp = data[i];
+        uint length_redundancy = (int) floor(log(temp) / log(2));   // 编码冗余位的长度，即gamma编码前0串的长度
+        uint length_code = (int) floor(log(temp) / log(2)) * 2 + 1; // gamma编码长度
+
+        if (shift == 0) {
+            // 如果剩余空位为0，则指针后移重置shift
+            p++;
+            shift = 32;
+        }
+        // 判断两种种情况，剩余空位数与编码长度的比较
+        if (shift >= length_code) {
+            // 如果剩余空位大于编码长度，去除冗余编码长度后，将temp左移shift-length_redundancy-1位后与encode[p]按位或
+            shift -= length_redundancy;
+            encode[p] |= temp << (shift - length_redundancy - 1);
+            shift = shift - length_redundancy - 1;
+        }
+        else {
+            // 如果剩余空位小于编码长度，较为复杂分为以下几种情况讨论
+            if (shift == length_redundancy) {
+                // 如果冗余编码长度与剩余空位相同，则重置shift，并将p指针后移
+                shift = 32 - (int) floor(log(temp) / log(2)) - 1;
+                encode[++p] |= temp << shift;
+            }
+            else if (shift > length_redundancy) {
+                // 如果剩余空位大于冗余编码长度，则减去冗余编码长度后，取temp高shift位，并将temp高shift置零，重置shift
+                shift -= length_redundancy;
+                int high_bits = get_high_bits(temp, shift);
+                encode[p] |= high_bits;
+                high_bits = set_high_bits0(temp, shift);
+                p++;
+                shift = 32 - (length_redundancy + 1 - shift);
+                encode[p] |= temp << shift;
+            }
+            else {
+                // 如果剩余空位小于冗余编码长度，则冗余编码长度减去shift后，shift = 32 - k，表示剩余冗余编码长度，指针后移
+                int k = length_redundancy - shift;
+                p++;
+                shift = 32 - k;
+                if (shift >= length_redundancy + 1) {
+                    // 如果剩余空位比temp二进制格式长，直接左移后添加到encode中
+                    shift = shift - length_redundancy - 1;
+                    encode[p] |= temp << shift;
+                }
+                else {
+                    // 如果剩余空位比temp二进制格式短。取高shift位，指针后移，temp高shift位置零
+                    int high_bits = get_high_bits(temp, shift);
+                    encode[p++] |= high_bits;
+                    temp = set_high_bits0(temp, shift);
+                    shift = 32 - (length_redundancy + 1 - shift);
+                    encode[p] |= temp << shift;
+                }
+            }
+        }
+        // cout << bitset<32>(encode[p]) << " " << p << " " << shift << "\n";
+    }
 }
 
 uint decode_gamma(uint *encode, uint &p, uint &shift) {
@@ -231,6 +332,30 @@ uint decode_data(uint *encode, uint index, uint mode) {
         }
         default :
             cout << "invalid mode!" << endl;          
+    }
+    return res;
+}
+
+uint decode_data_piece(uint *encode, uint *infor, uint index) {
+    uint start = 0, flag = 0, p, shift;
+    for(int i = 0; i <  infor[0] - 1; i++) {
+        if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
+            flag = 1;
+            start = infor[i * 3 + 1];
+            p = infor[i * 3 + 2];
+            shift = infor[i * 3 + 3];
+            break;
+        }
+    }
+    if(flag == 0) {
+        start = infor[(infor[0] - 1) * 3 + 1];
+        p = infor[(infor[0] - 1) * 3 + 2];
+        shift = infor[(infor[0] - 1) * 3 + 3];
+    }
+
+    uint res = 0;
+    for(int i = start; i < index ; i++) {
+        res += decode_gamma(encode, p, shift);
     }
     return res;
 }

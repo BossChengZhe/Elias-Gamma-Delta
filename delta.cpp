@@ -6,10 +6,11 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 60000; // count为数据规模
+const int count = 25000; // count为数据规模
 const int mode_c = 2;
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
+uint *get_data_piece(uint *data);
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
 uint calculate_space(uint *data);                                // 计算编码空间
 uint set_high_bits0(uint sub, int num);                          // 数字高num位置0
@@ -17,33 +18,41 @@ uint get_high_bits(uint sub, int num);                           // 获取数字
 uint get_bits(uint sub, int low, int high);                      // 获取数字从low位到high位的数字
 void encode_gamma(uint num, uint *encode, uint &p, uint &shift); // 对数字num进行gamma编码
 void encode_delta(uint *data, uint *encode);                     // 对于数据进行delta编码
+void encode_delta_piece(uint *data, uint *encode, uint *infor);
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
 uint decode_delta(uint *encode, uint &p, uint &shift);           // 解delta编码
 uint decode_data(uint *encode, uint index, uint mode);           // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
+uint decode_data_piece(uint *encode, uint *infor, uint index);
 
 int main()
 {
-    // uint data_mode, decode_mode;
-    // cin >> data_mode >> decode_mode;
-
     uint *data = new uint[count]();
-    get_data(data, mode_c);
+
+    // get_data(data, mode_c);
+    uint *infor = get_data_piece(data);
+
+    // ofstream test_gap("gap.txt", ios_base::trunc);
+    // for(int i = 0; i < count ; i++)
+    //     test_gap << data[i] << endl;
+    // test_gap.close();
+
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
-    encode_delta(data, encode);
 
-    ofstream test("result.txt", ios_base::trunc);
-    for(int i = 0; i < sum_space ; i++)
-    {
-        test << bitset<32>(encode[i]) << endl;
-    }
-    test.close();
+    // encode_delta(data, encode);
+    encode_delta_piece(data, encode, infor);
+
+    // ofstream test("result.txt", ios_base::trunc);
+    // for(int i = 0; i < sum_space ; i++)
+    //     test << bitset<32>(encode[i]) << endl;
+    // test.close();
 
     get_data(data, 2);
     uint num = 0;
     for(int i = 0; i < count ; i++)
     {
-        uint res = decode_data(encode, i + 1, mode_c);
+        // uint res = decode_data(encode, i + 1, mode_c);
+        uint res = decode_data_piece(encode, infor, i + 1);
         if(res == data[i])
             num++;
         else { 
@@ -89,6 +98,42 @@ void get_data(uint *data, uint mode)
             cout << "invalid mode" << endl;
     }
     load_data.close();
+}
+
+uint *get_data_piece(uint *data) {
+    uint temp = 0, i = 0;
+    ifstream load_data("data.txt");
+    while(load_data >> temp) {
+        data[i++] = temp;
+    }
+    load_data.close();
+
+    uint num = 1;                                                // 计算断点的数目，开头的也算，所以num初始值为1
+    for(int i = 0; i < count - 1 ; i++) {
+        // 统计断点个数
+        if(data[i] > data[i + 1]) {
+            num++;
+        }
+    }
+
+    uint *infor = new uint[num * 3 + 1]();
+    infor[0] = num;
+    infor[1] = 0, infor[2] = 0, infor[3] = 0;
+    uint q = 4, pre = data[0], te = pre;
+    for (int i = 0; i < count - 1; i++) {
+        if(pre > data[i+1]) {
+            infor[q++] = i + 1;
+            infor[q++] = 0;
+            infor[q++] = 0;
+            pre = data[i + 1];
+        }
+        else {
+            te = data[i + 1];
+            data[i + 1] -= pre;
+            pre = te;
+        }
+    }
+    return infor;
 }
 
 uint calculate_bits(uint num)
@@ -197,6 +242,41 @@ void encode_delta(uint *data, uint *encode) {
     }
 }
 
+void encode_delta_piece(uint *data, uint *encode, uint *infor) {
+    uint p = 0, shift = 32, q = 1;
+    for(int i = 0; i < count ; i++) {
+        if(infor[q] == i) {
+            // 即当前数据处于断点位置，记录编码指针和整数内部偏移
+            infor[++q] = p;
+            infor[++q] = shift;
+            ++q;
+        }
+
+        if(shift == 0) {
+            p++;
+            shift = 32;
+        }
+        // cout << data[i] << '\n';
+        encode_gamma(calculate_bits(data[i]), encode, p, shift);
+        uint length_data = calculate_bits(data[i]) - 1;
+        uint temp = set_high_bits0(data[i], 1);                // 去掉数的最高位，即最高位置零，数字长度减一
+        
+        if(shift >= length_data) {
+            shift -= length_data;
+            encode[p] |= temp << shift;
+        }
+        else {
+            uint bits = get_bits(temp, length_data - shift + 1, length_data);
+            encode[p++] |= bits;
+            bits = get_bits(temp, 1, length_data - shift);
+            length_data -= shift;
+            shift = 32;
+            shift -= length_data;
+            encode[p] |= bits << shift;
+        }
+    }
+}
+
 uint decode_gamma(uint *encode, uint &p, uint &shift)
 {
     uint num = 0;
@@ -279,11 +359,32 @@ uint decode_data(uint *encode, uint index, uint mode)
             }
             res = decode_delta(encode, p, shift);
             break;
-        case 3:
-            cout << "There is no such mode!" << endl;
-            break;
         default :
             cout << "invalid mode!" << endl;
+    }
+    return res;
+}
+
+uint decode_data_piece(uint *encode, uint *infor, uint index) {
+    uint start = 0, flag = 0, p, shift;
+    for(int i = 0; i <  infor[0] - 1; i++) {
+        if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
+            flag = 1;
+            start = infor[i * 3 + 1];
+            p = infor[i * 3 + 2];
+            shift = infor[i * 3 + 3];
+            break;
+        }
+    }
+    if(flag == 0) {
+        start = infor[(infor[0] - 1) * 3 + 1];
+        p = infor[(infor[0] - 1) * 3 + 2];
+        shift = infor[(infor[0] - 1) * 3 + 3];
+    }
+
+    uint res = 0;
+    for(int i = start; i < index ; i++) {
+        res += decode_delta(encode, p, shift);
     }
     return res;
 }
