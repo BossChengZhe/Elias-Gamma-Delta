@@ -7,7 +7,7 @@ using namespace std;
 #define uint unsigned int
 
 const int count = 60000;
-const int mode_c = 1;
+const int mode_c = 2;
 
 void get_data(uint *data, uint mode);
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
@@ -15,7 +15,8 @@ uint calculate_space(uint *data);                                // 计算编码
 uint set_high_bits0(uint sub, int num);                          // 数字高num位置0
 uint get_high_bits(uint sub, int num);                           // 获取数字高num位
 uint get_bits(uint sub, int low, int high);                      // 获取数字从low位到high位的数字
-void encode_gamma(uint *gap, uint *encode);                      // 编码gamma
+void encode_gamma(uint *gap, uint *encode, uint &p, uint &shift);// 编码gamma
+uint** encode_gamma_piece(uint *data, uint *encode);             // 编码数据
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解码gamma
 uint decode_data(uint *encode, uint index, uint mode);           // 得到数据
 
@@ -25,7 +26,8 @@ int main() {
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
 
-    encode_gamma(data, encode);
+    uint p = 0, shift = 32;
+    encode_gamma(data, encode, p, shift);
     ofstream result("result.txt", ios_base::trunc);
     for(int i = 0; i < sum_space ; i++)
     {
@@ -115,9 +117,7 @@ uint get_bits(uint sub, int low, int high) {
     return sub >> (low - 1);
 }
 
-void encode_gamma(uint *gap, uint *encode) {
-    uint shift = 32;                  // 一个整数的剩余空位，既没有存储编码的地方
-    uint p = 0;                      // 编码指针
+void encode_gamma(uint *gap, uint *encode,uint &p, uint &shift) {
     for (int i = 0; i < count; ++i) {
         uint temp = gap[i];
         uint length_redundancy = (int) floor(log(temp) / log(2));   // 编码冗余位的长度，即gamma编码前0串的长度
@@ -173,6 +173,10 @@ void encode_gamma(uint *gap, uint *encode) {
             }
         }
     }
+}
+
+uint** encode_gamma_piece(uint *data, uint *encode, uint mode){
+
 }
 
 uint decode_gamma(uint *encode, uint &p, uint &shift) {
