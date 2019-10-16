@@ -6,7 +6,7 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 1000; // count为数据规模
+const int count = 40000; // count为数据规模
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
@@ -96,7 +96,7 @@ uint calculate_bits(uint num)
 }
 
 uint calculate_space(uint *data) {
-    // detal编码由两部分构成，对数据的位数进行gamma编码，和去除数据最高位
+    // delta编码由两部分构成，对数据的位数进行gamma编码，和去除数据最高位
     // 第一部分编码长度: 2*calculate_bits(calculate_bits(num)) - 1
     // 第二部分编码长度: calculate_bits(num) - 1
     uint res = 0;

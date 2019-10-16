@@ -1,6 +1,6 @@
 import random
 
-resultlist = random.sample(range(1, 20000), 1000)
+resultlist = random.sample(range(1, 800000), 40000)
 
 resultlist.sort()
 

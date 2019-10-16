@@ -37,6 +37,7 @@
         "cmath": "cpp",
         "ratio": "cpp",
         "new": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "gamma_plus": "cpp"
     } // 效果效果比cpptools要好
 }
