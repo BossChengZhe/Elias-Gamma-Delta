@@ -4,7 +4,7 @@
 #include <bitset>
 using namespace std;
 
-const int count = 40000;                      // 数据规模
+const int count = 60000;                      // 数据规模
 
 void get_data(int *gap);                     // get data from text file
 int calculate_space(int *gap);               // calculate the space of 01 stream after encode

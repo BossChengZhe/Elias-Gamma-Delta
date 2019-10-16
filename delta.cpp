@@ -6,7 +6,8 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 40000; // count为数据规模
+const int count = 60000; // count为数据规模
+const int mode_c = 2;
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
 uint calculate_bits(uint num);                                   // 返回一个整数的位数
@@ -26,7 +27,7 @@ int main()
     // cin >> data_mode >> decode_mode;
 
     uint *data = new uint[count]();
-    get_data(data, 1);
+    get_data(data, mode_c);
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
     encode_delta(data, encode);
@@ -38,11 +39,11 @@ int main()
     }
     test.close();
 
-    get_data(data, 1);
+    get_data(data, 2);
     uint num = 0;
     for(int i = 0; i < count ; i++)
     {
-        uint res = decode_data(encode, i + 1, 2);
+        uint res = decode_data(encode, i + 1, mode_c);
         if(res == data[i])
             num++;
         else { 
@@ -65,13 +66,6 @@ void get_data(uint *data, uint mode)
     uint temp = 0, i = 0;
     switch(mode) {
         case 1: {
-            while (load_data >> temp)
-            {
-                data[i++] = temp;
-            }
-            break;
-        }  
-        case 2: {
             i++;
             uint pre = 0;
             load_data >> temp;
@@ -81,6 +75,13 @@ void get_data(uint *data, uint mode)
             {
                 data[i++] = temp - pre;
                 pre = temp;
+            }
+            break;
+        }  
+        case 2: {
+            while (load_data >> temp)
+            {
+                data[i++] = temp;
             }
             break;
         }
