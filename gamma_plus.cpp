@@ -2,12 +2,13 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <ctime>
 using namespace std;
 
 #define uint unsigned int
 
-const int count = 25000;
-const int mode_c = 2;
+const int count = 100000;
+// const int mode_c = 2;
 
 void get_data(uint *data, uint mode);
 uint *get_data_piece(uint *data);                                // 读取区间递增的数据
@@ -23,6 +24,8 @@ uint decode_data(uint *encode, uint index, uint mode);           // 得到数据
 uint decode_data_piece(uint *encode, uint *infor, uint index);   // 得到区间递增的数据
 
 int main() {
+    clock_t startTime,endTime;
+
     uint *data = new uint[count]();
     // get_data(data, mode_c);
     uint* infor = get_data_piece(data);
@@ -30,22 +33,38 @@ int main() {
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
 
-    // encode_gamma(data, encode);
-    encode_gamma_piece(data, encode, infor);
+    float compress_rate = float(sum_space) / float(count);
+    cout << "Compress rate:" << compress_rate << endl;
+
+    for(int i = 0; i < 3 ; i++)
+    {
+        startTime = clock();
+        // encode_gamma(data, encode);
+        encode_gamma_piece(data, encode, infor);
+        endTime = clock();
+        cout << "Encode time:" << endTime - startTime << endl;
+    }
 
     get_data(data, 2);
     int num = 0;
-    for(int i = 0; i < count ; i++)
+    for(int i = 0; i < 3 ; i++)
     {
-        // if (data[i] == decode_data(encode, i + 1, mode_c))
-            // num++;
-        if (data[i] == decode_data_piece(encode, infor, i + 1))
-            num++;
-        else {
-            cout << i << endl;
-            break;
+        startTime = clock();
+        for(int i = 0; i < count ; i++)
+        {
+            // if (data[i] == decode_data(encode, i + 1, mode_c))
+                // num++;
+            if (data[i] == decode_data_piece(encode, infor, i + 1))
+                num++;
+            else {
+                cout << i << endl;
+                break;
+            }
         }
+        endTime = clock();
+        cout << "Dncode time:" << (endTime - startTime) / (float) count<< endl;
     }
+    
     cout << num << endl;
 
     delete[] data;
@@ -326,7 +345,7 @@ uint decode_data(uint *encode, uint index, uint mode) {
         case 2: {
             for(int i = 0; i < index - 1 ; i++)
                 decode_gamma(encode, p, shift);
-            cout << p << " " << shift << "\n";
+            // cout << p << " " << shift << "\n";
             res = decode_gamma(encode, p, shift);
             break;
         }

@@ -2,11 +2,12 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <ctime>
 using namespace std;
 
 #define uint unsigned int
 
-const int count = 25000; // count为数据规模
+const int count = 10000; // count为数据规模
 const int mode_c = 2;
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
@@ -26,40 +27,49 @@ uint decode_data_piece(uint *encode, uint *infor, uint index);
 
 int main()
 {
+    clock_t startTime,endTime;
+
     uint *data = new uint[count]();
 
     // get_data(data, mode_c);
     uint *infor = get_data_piece(data);
 
-    // ofstream test_gap("gap.txt", ios_base::trunc);
-    // for(int i = 0; i < count ; i++)
-    //     test_gap << data[i] << endl;
-    // test_gap.close();
-
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
 
-    // encode_delta(data, encode);
-    encode_delta_piece(data, encode, infor);
+    float compress_rate = float(sum_space) / float(count);
+    cout << "Compress rate:" << compress_rate << endl;
 
-    // ofstream test("result.txt", ios_base::trunc);
-    // for(int i = 0; i < sum_space ; i++)
-    //     test << bitset<32>(encode[i]) << endl;
-    // test.close();
+    for(int i = 0; i < 3 ; i++)
+    {
+        startTime = clock();
+        // encode_delta(data, encode);
+        encode_delta_piece(data, encode, infor);
+        endTime = clock();
+        cout << "Encode time:" << endTime - startTime << endl;
+    }
+    
 
     get_data(data, 2);
     uint num = 0;
-    for(int i = 0; i < count ; i++)
+    for(int i = 0; i < 3 ; i++)
     {
-        // uint res = decode_data(encode, i + 1, mode_c);
-        uint res = decode_data_piece(encode, infor, i + 1);
-        if(res == data[i])
-            num++;
-        else { 
-            cout << i << endl;
-            break;
+        startTime = clock();
+        for(int i = 0; i < count ; i++)
+        {
+            // uint res = decode_data(encode, i + 1, mode_c);
+            uint res = decode_data_piece(encode, infor, i + 1);
+            if(res == data[i])
+                num++;
+            else { 
+                cout << i << endl;
+                break;
+            }
         }
+        endTime = clock();
+        cout << "Dncode time:" << (endTime - startTime) / (float) count<< endl;
     }
+    
     cout << num << endl;
 
     delete[] data;
