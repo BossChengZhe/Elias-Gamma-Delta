@@ -21,8 +21,18 @@ uint calculate_low(uint data_size, uint l)
     return (uint)ceil((float)(data_size * l) / 32.0);
 }
 
-uint get_lowbits(uint num, uint l)
+uint calculate_l(uint *data, uint data_size)
 {
-    uint temp = (1U << l) - 1;
-    return temp & num;
+    uint max_data = 0;
+    for (int i = 0; i < data_size; i++) 
+        // 找到数组中最大的数
+        if(data[i] > max_data)
+            max_data = data[i];
+
+    uint res = (uint)floor(log(max_data) / log(2));
+    if(res < 0)
+        return 0;
+    else
+        return res;
 }
+
