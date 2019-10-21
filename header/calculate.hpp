@@ -20,3 +20,9 @@ uint calculate_low(uint data_size, uint l)
 {
     return (uint)ceil((float)(data_size * l) / 32.0);
 }
+
+uint get_lowbits(uint num, uint l)
+{
+    uint temp = (1U << l) - 1;
+    return temp & num;
+}

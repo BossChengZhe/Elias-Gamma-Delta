@@ -1,12 +1,12 @@
 import random
 
-# resultlist = random.sample(range(1, 1000000), 10000)
+resultlist = random.sample(range(1, 100000), 1000)
 
-# resultlist.sort()
+resultlist.sort()
 
-resultlist = []
-for i in range(100):
-	resultlist += sorted(random.sample(range(1, 1000000), 1000))
+# resultlist = []
+# for i in range(100):
+# 	resultlist += sorted(random.sample(range(1, 1000000), 1000))
 
 
 f = open('data.txt', 'w');
