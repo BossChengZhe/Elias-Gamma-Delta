@@ -14,6 +14,5 @@ int main()
 {
     uint *data = new uint[count]();
     get_data(data);
-    
     return 0;
 }
