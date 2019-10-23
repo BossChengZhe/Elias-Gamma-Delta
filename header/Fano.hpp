@@ -56,7 +56,7 @@ void store_high_bits(uint *data, uint *high_bits, uint data_size, uint l)
     uint shift = 32, p = 0;
     for(int i = 0; i < data_size ; i++)
     {
-        if(shift == 32)
+        if(shift == 0)
         {
             shift = 32;
             p++;
