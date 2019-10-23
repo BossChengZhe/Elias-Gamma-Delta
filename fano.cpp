@@ -8,7 +8,7 @@ using namespace std;
 
 #define uint unsigned int
 
-const uint count = 100000;
+const uint count = 1000000;
 
 int main()
 {
