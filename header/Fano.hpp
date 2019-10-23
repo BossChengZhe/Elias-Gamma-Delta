@@ -25,7 +25,6 @@ void store_low_bits(uint *data, uint *low_bits, uint data_size, uint l)
     uint shift = 32, p = 0;
     for(int i = 0; i < data_size ; i++)
     {
-        cout << bitset<32>(data[i]) << " " << data[i] << endl;
         if(shift == 0)
         {
             p++;
@@ -41,11 +40,11 @@ void store_low_bits(uint *data, uint *low_bits, uint data_size, uint l)
         }
         else{
             // 如果剩余位数不够存储
-            uint temp1 = get_bits(temp, shift + 1, l);
+            uint temp1 = get_bits(temp, l-shift + 1, l);
             low_bits[p++] |= temp1;
             shift = 32 - (l - shift);
-            temp = get_lowbits(temp, shift);
-            low_bits[p] |= temp;
+            temp = get_lowbits(temp, l - shift);
+            low_bits[p] |= temp << shift;
         }
     }
 }
@@ -123,7 +122,7 @@ uint decode_fano(uint *data, uint *high_bits, uint *low_bits, uint data_size, ui
     uint res = 0;
     for(int i = 0; i < data_size ; i++)
     {
-        if(shift == 32)
+        if(shift == 0)
         {
             p++;
             shift = 32;

@@ -8,7 +8,7 @@ using namespace std;
 
 #define uint unsigned int
 
-const uint count = 1000;
+const uint count = 100000;
 
 int main()
 {
@@ -17,7 +17,6 @@ int main()
     uint l = calculate_l(data, count);
     uint space_low = calculate_low(count, l);
     uint space_high = calculate_high(data, count, l);
-    cout << space_low << " " << space_high << " " << l << endl;
     uint *high_bits = new uint[space_high]();
     uint *low_bits = new uint[space_low]();
     store_low_bits(data, low_bits, count, l);
@@ -31,6 +30,9 @@ int main()
         high << bitset<32>(high_bits[i]) << endl;
     low.close();
     high.close();
-    
+
+    uint res = decode_fano(data, high_bits, low_bits, count, l);
+    cout << res << endl;
+
     return 0;
 }
