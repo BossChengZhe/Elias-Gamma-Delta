@@ -29,7 +29,7 @@ uint calculate_l(uint *data, uint data_size)
         if(data[i] > max_data)
             max_data = data[i];
 
-    uint res = (uint)floor(log(max_data) / log(2));
+    uint res = (uint)floor(log(max_data/data_size) / log(2));
     if(res < 0)
         return 0;
     else
