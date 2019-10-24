@@ -7,8 +7,8 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 10000; // count为数据规模
-const int mode_c = 2;
+const int count = 1000000; // count为数据规模
+const int mode_c = 1;
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
 uint *get_data_piece(uint *data);
@@ -22,7 +22,7 @@ void encode_delta(uint *data, uint *encode);                     // 对于数据
 void encode_delta_piece(uint *data, uint *encode, uint *infor);
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
 uint decode_delta(uint *encode, uint &p, uint &shift);           // 解delta编码
-uint decode_data(uint *encode, uint index, uint mode);           // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
+void decode_data(uint *data, uint *encode, uint mode);           // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
 uint decode_data_piece(uint *encode, uint *infor, uint index);
 
 int main()
@@ -31,8 +31,8 @@ int main()
 
     uint *data = new uint[count]();
 
-    // get_data(data, mode_c);
-    uint *infor = get_data_piece(data);
+    get_data(data, mode_c);
+    // uint *infor = get_data_piece(data);
 
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
@@ -43,34 +43,28 @@ int main()
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        // encode_delta(data, encode);
-        encode_delta_piece(data, encode, infor);
+        encode_delta(data, encode);
+        // encode_delta_piece(data, encode, infor);
         endTime = clock();
         cout << "Encode time:" << endTime - startTime << endl;
     }
-    
+
+    ofstream re("source\\result.txt", ios_base::trunc);
+    for(int i = 0; i < sum_space ; i++)
+    {
+        re << bitset<32>(encode[i]) << endl;
+    }
+    re.close();
 
     get_data(data, 2);
-    uint num = 0;
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        for(int i = 0; i < count ; i++)
-        {
-            // uint res = decode_data(encode, i + 1, mode_c);
-            uint res = decode_data_piece(encode, infor, i + 1);
-            if(res == data[i])
-                num++;
-            else { 
-                cout << i << endl;
-                break;
-            }
-        }
+        decode_data(data, encode, mode_c);
         endTime = clock();
-        cout << "Dncode time:" << (endTime - startTime) / (float) count<< endl;
+        cout << "Dncode time:" << (endTime - startTime)<< endl;
     }
     
-    cout << num << endl;
 
     delete[] data;
     delete[] encode;
@@ -81,7 +75,7 @@ void get_data(uint *data, uint mode)
 {
     // data储存原始数据的容器
     // mode表示读取数据的模式,1:求整数之间的gap值;2:直接读取整数;
-    ifstream load_data("data.txt");
+    ifstream load_data("source\\data.txt");
     uint temp = 0, i = 0;
     switch(mode) {
         case 1: {
@@ -338,42 +332,46 @@ uint decode_delta(uint *encode, uint &p, uint &shift)
     return res;
 }              
 
-uint decode_data(uint *encode, uint index, uint mode)
+void decode_data(uint *data, uint *encode, uint mode)
 {
-    // encode表示编码序列
-    // index表示需要解码的数所在位置
-    // mode表示数据对应关系，1:严格递增数列;2:随机数列;3:区间递增数列;
     uint p = 0, shift = 32, res = 0;
-    switch(mode) {
+    uint cnt = 0;
+    switch(mode)
+    {
         case 1:
-            for(int i = 0; i < index ; i++)
-                res += decode_delta(encode, p, shift);
-            break;
-        case 2:
-            for(int i = 0; i < index - 1 ; i++)
+        {
+            for(int i = 0; i < count ; i++)
             {
-                // 按照编码流程走一遍，但不出编码结果，只是确定位
-                uint temp = decode_gamma(encode, p, shift);
-                if(temp - 1 > shift) {
-                    //去掉高位后的数字位数大于剩余空位shift
-                    p++;
-                    shift = 32 - (temp - 1 - shift);
+                res += decode_delta(encode, p, shift);
+                if(res == data[i])
+                    cnt++;
+                else{
+                    cout << i << endl;
+                    break;
                 }
-                else if(temp - 1 == shift) {
-                    //去掉高位后的数字位数等于剩余空位shift
-                    p++;
-                    shift = 32;
-                }
-                else
-                    shift -= (temp - 1);
             }
-            res = decode_delta(encode, p, shift);
             break;
+        }
+        case 2:
+        {
+            for(int i = 0; i < count ; i++)
+            {
+                uint temp = decode_delta(encode, p, shift);
+                if(data[i] == temp)
+                    cnt++;
+                else{
+                    cout << i << endl;
+                    break;
+                }
+            }
+            break;
+        }
         default :
             cout << "invalid mode!" << endl;
     }
-    return res;
+    cout << "OK:" << cnt << endl;
 }
+
 
 uint decode_data_piece(uint *encode, uint *infor, uint index) {
     uint start = 0, flag = 0, p, shift;

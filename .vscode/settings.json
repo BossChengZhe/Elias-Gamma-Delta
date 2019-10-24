@@ -38,6 +38,7 @@
         "ratio": "cpp",
         "new": "cpp",
         "iosfwd": "cpp",
-        "gamma_plus": "cpp"
+        "gamma_plus": "cpp",
+        "bitset": "cpp"
     } // 效果效果比cpptools要好
 }

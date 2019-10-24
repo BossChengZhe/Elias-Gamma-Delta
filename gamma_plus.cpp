@@ -7,8 +7,8 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 100000;
-// const int mode_c = 2;
+const int count = 10000;
+const int mode_c = 1;
 
 void get_data(uint *data, uint mode);
 uint *get_data_piece(uint *data);                                // 读取区间递增的数据
@@ -27,8 +27,8 @@ int main() {
     clock_t startTime,endTime;
 
     uint *data = new uint[count]();
-    // get_data(data, mode_c);
-    uint* infor = get_data_piece(data);
+    get_data(data, mode_c);
+    // uint* infor = get_data_piece(data);
 
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
@@ -39,33 +39,37 @@ int main() {
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        // encode_gamma(data, encode);
-        encode_gamma_piece(data, encode, infor);
+        encode_gamma(data, encode);
+        // encode_gamma_piece(data, encode, infor);
         endTime = clock();
         cout << "Encode time:" << endTime - startTime << endl;
     }
 
     get_data(data, 2);
-    int num = 0;
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        for(int i = 0; i < count ; i++)
+        for(int j = 0; j < 1000 ; j++)
         {
-            // if (data[i] == decode_data(encode, i + 1, mode_c))
-                // num++;
-            if (data[i] == decode_data_piece(encode, infor, i + 1))
-                num++;
-            else {
-                cout << i << endl;
-                break;
-            }
+            decode_data(encode, count, mode_c);
+            // decode_data_piece(encode, infor, count);
         }
+        
+        // for(int i = 0; i < count ; i++)
+        // {
+        //     // if (data[i] == decode_data(encode, i + 1, mode_c))
+        //         // num++;
+        //     if (data[i] == decode_data_piece(encode, infor, i + 1))
+        //         num++;
+        //     else {
+        //         cout << i << endl;
+        //         break;
+        //     }
+        // }
         endTime = clock();
-        cout << "Dncode time:" << (endTime - startTime) / (float) count<< endl;
+        cout << "Dncode time:" << (endTime - startTime) / 1000.0<< endl;
     }
     
-    cout << num << endl;
 
     delete[] data;
     delete[] encode;
@@ -75,7 +79,7 @@ int main() {
 void get_data(uint *data, uint mode) {
     // data储存原始数据的容器
     // mode表示读取数据的模式,1:求整数之间的gap值;2:直接读取整数;
-    ifstream load_data("data.txt");
+    ifstream load_data("source\\data.txt");
     uint temp = 0, i = 0;
     switch(mode) {
         case 1: {
