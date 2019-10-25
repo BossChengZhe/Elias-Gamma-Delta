@@ -409,27 +409,3 @@ void decode_piece(uint *data, uint *encode, uint *infor, uint data_size)
     }
     // cout << "OK!:" << cnt << endl;
 }
-
-// uint decode_data_piece(uint *encode, uint *infor, uint index) {
-//     uint start = 0, flag = 0, p, shift;
-//     for(int i = 0; i <  infor[0] - 1; i++) {
-//         if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
-//             flag = 1;
-//             start = infor[i * 3 + 1];
-//             p = infor[i * 3 + 2];
-//             shift = infor[i * 3 + 3];
-//             break;
-//         }
-//     }
-//     if(flag == 0) {
-//         start = infor[(infor[0] - 1) * 3 + 1];
-//         p = infor[(infor[0] - 1) * 3 + 2];
-//         shift = infor[(infor[0] - 1) * 3 + 3];
-//     }
-
-//     uint res = 0;
-//     for(int i = start; i < index ; i++) {
-//         res += decode_delta(encode, p, shift);
-//     }
-//     return res;
-// }
