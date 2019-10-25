@@ -34,16 +34,6 @@ int main()
         endTime = clock();
         cout << "Encode time:" << endTime - startTime << endl;
     }
-    
-
-    // ofstream low("source\\low_bits.txt", ios_base::trunc);
-    // ofstream high("source\\high_bits.txt", ios_base::trunc);d
-    // for(int i = 0; i < space_low; i++)
-    //     low << bitset<32>(low_bits[i]) << endl;
-    // for(int i = 0; i < space_high; i++)
-    //     high << bitset<32>(high_bits[i]) << endl;
-    // low.close();
-    // high.close();
 
     for(int i = 0; i < 3 ; i++)
     {
