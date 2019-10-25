@@ -7,7 +7,7 @@ using namespace std;
 
 #define uint unsigned int
 
-const int count = 1000000; // count为数据规模
+const int count = 100000; // count为数据规模
 const int mode_c = 1;
 
 void get_data(uint *data, uint mode);                            // 获取完整数据
@@ -23,7 +23,7 @@ void encode_delta_piece(uint *data, uint *encode, uint *infor);
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解gamma编码
 uint decode_delta(uint *encode, uint &p, uint &shift);           // 解delta编码
 void decode_data(uint *data, uint *encode, uint mode);           // 由于分为好几种形式，gap、直接编码，和区间递增，故采用单独的函数获得数据
-uint decode_data_piece(uint *encode, uint *infor, uint index);
+void decode_piece(uint *data, uint *encode, uint *infor, uint data_size);
 
 int main()
 {
@@ -31,8 +31,8 @@ int main()
 
     uint *data = new uint[count]();
 
-    get_data(data, mode_c);
-    // uint *infor = get_data_piece(data);
+    // get_data(data, mode_c);
+    uint *infor = get_data_piece(data);
 
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
@@ -43,10 +43,15 @@ int main()
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        encode_delta(data, encode);
-        // encode_delta_piece(data, encode, infor);
+        
+        for(int j = 0; j < 10; j++)
+        {
+            // encode_delta(data, encode);
+            encode_delta_piece(data, encode, infor);
+        }
+        
         endTime = clock();
-        cout << "Encode time:" << endTime - startTime << endl;
+        cout << "Encode time:" << (endTime - startTime) / 10.0 << endl;
     }
 
     ofstream re("source\\result.txt", ios_base::trunc);
@@ -60,9 +65,14 @@ int main()
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        decode_data(data, encode, mode_c);
+        for(int j = 0; j < 10; j++)
+        {
+            // decode_data(data, encode, mode_c);
+            decode_piece(data, encode, infor, count);
+        }
+        
         endTime = clock();
-        cout << "Dncode time:" << (endTime - startTime)<< endl;
+        cout << "Decode time:" << (endTime - startTime) / 10.0<< endl;
     }
     
 
@@ -106,7 +116,7 @@ void get_data(uint *data, uint mode)
 
 uint *get_data_piece(uint *data) {
     uint temp = 0, i = 0;
-    ifstream load_data("data.txt");
+    ifstream load_data("source\\data.txt");
     while(load_data >> temp) {
         data[i++] = temp;
     }
@@ -372,27 +382,54 @@ void decode_data(uint *data, uint *encode, uint mode)
     cout << "OK:" << cnt << endl;
 }
 
+void decode_piece(uint *data, uint *encode, uint *infor, uint data_size)
+{
+    uint inf = 0;                        // 信息数组的指针
+    uint res = 0;
+    uint p = 0, shift = 32;
+    uint pre = 0;
+    uint cnt = 0;
+    for(int i = 0; i < data_size; i++)
+    {
+        if(i == infor[inf * 3 + 1])
+        {
+            res = decode_delta(encode, p, shift);
+            inf++;
+        }
+        else
+            res = pre + decode_delta(encode, p, shift);
 
-uint decode_data_piece(uint *encode, uint *infor, uint index) {
-    uint start = 0, flag = 0, p, shift;
-    for(int i = 0; i <  infor[0] - 1; i++) {
-        if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
-            flag = 1;
-            start = infor[i * 3 + 1];
-            p = infor[i * 3 + 2];
-            shift = infor[i * 3 + 3];
+        pre = res;
+        if(res == data[i])
+            cnt++;
+        else{
+            cout << "There is something wrong in " << i << endl;
             break;
         }
     }
-    if(flag == 0) {
-        start = infor[(infor[0] - 1) * 3 + 1];
-        p = infor[(infor[0] - 1) * 3 + 2];
-        shift = infor[(infor[0] - 1) * 3 + 3];
-    }
-
-    uint res = 0;
-    for(int i = start; i < index ; i++) {
-        res += decode_delta(encode, p, shift);
-    }
-    return res;
+    // cout << "OK!:" << cnt << endl;
 }
+
+// uint decode_data_piece(uint *encode, uint *infor, uint index) {
+//     uint start = 0, flag = 0, p, shift;
+//     for(int i = 0; i <  infor[0] - 1; i++) {
+//         if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
+//             flag = 1;
+//             start = infor[i * 3 + 1];
+//             p = infor[i * 3 + 2];
+//             shift = infor[i * 3 + 3];
+//             break;
+//         }
+//     }
+//     if(flag == 0) {
+//         start = infor[(infor[0] - 1) * 3 + 1];
+//         p = infor[(infor[0] - 1) * 3 + 2];
+//         shift = infor[(infor[0] - 1) * 3 + 3];
+//     }
+
+//     uint res = 0;
+//     for(int i = start; i < index ; i++) {
+//         res += decode_delta(encode, p, shift);
+//     }
+//     return res;
+// }

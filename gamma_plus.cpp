@@ -21,14 +21,14 @@ void encode_gamma(uint *gap, uint *encode);// 编码gamma
 void encode_gamma_piece(uint *data, uint *encode, uint *infor);  // 编码数据
 uint decode_gamma(uint *encode, uint &p, uint &shift);           // 解码gamma
 uint decode_data(uint *encode, uint index, uint mode);           // 得到数据
-uint decode_data_piece(uint *encode, uint *infor, uint index);   // 得到区间递增的数据
+void decode_piece(uint *data, uint *encode, uint *infor);
 
 int main() {
     clock_t startTime,endTime;
 
     uint *data = new uint[count]();
-    get_data(data, mode_c);
-    // uint* infor = get_data_piece(data);
+    // get_data(data, mode_c);
+    uint* infor = get_data_piece(data);
 
     uint sum_space = calculate_space(data);
     uint *encode = new uint[sum_space]();
@@ -39,35 +39,26 @@ int main() {
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        encode_gamma(data, encode);
-        // encode_gamma_piece(data, encode, infor);
+        for(int j = 0; j < 10; j++)
+        {
+            // encode_gamma(data, encode);
+            encode_gamma_piece(data, encode, infor);
+        }
         endTime = clock();
-        cout << "Encode time:" << endTime - startTime << endl;
+        cout << "Encode time:" << (endTime - startTime) / 10.0 << endl;
     }
 
     get_data(data, 2);
     for(int i = 0; i < 3 ; i++)
     {
         startTime = clock();
-        for(int j = 0; j < 1000 ; j++)
+        for(int j = 0; j < 10; j++)
         {
-            decode_data(encode, count, mode_c);
-            // decode_data_piece(encode, infor, count);
+            // decode_data(encode, count, mode_c);
+            decode_piece(data, encode, infor);
         }
-        
-        // for(int i = 0; i < count ; i++)
-        // {
-        //     // if (data[i] == decode_data(encode, i + 1, mode_c))
-        //         // num++;
-        //     if (data[i] == decode_data_piece(encode, infor, i + 1))
-        //         num++;
-        //     else {
-        //         cout << i << endl;
-        //         break;
-        //     }
-        // }
         endTime = clock();
-        cout << "Dncode time:" << (endTime - startTime) / 1000.0<< endl;
+        cout << "Decode time:" << (endTime - startTime) / 10.0<< endl;
     }
     
 
@@ -110,7 +101,7 @@ void get_data(uint *data, uint mode) {
 
 uint *get_data_piece(uint *data) {
     uint temp = 0, i = 0;
-    ifstream load_data("data.txt");
+    ifstream load_data("source\\data.txt");
     while(load_data >> temp) {
         data[i++] = temp;
     }
@@ -359,26 +350,53 @@ uint decode_data(uint *encode, uint index, uint mode) {
     return res;
 }
 
-uint decode_data_piece(uint *encode, uint *infor, uint index) {
-    uint start = 0, flag = 0, p, shift;
-    for(int i = 0; i <  infor[0] - 1; i++) {
-        if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
-            flag = 1;
-            start = infor[i * 3 + 1];
-            p = infor[i * 3 + 2];
-            shift = infor[i * 3 + 3];
+void decode_piece(uint *data, uint *encode, uint *infor)
+{
+    uint inf = 0;                        // 信息数组的指针
+    uint res = 0;
+    uint p = 0, shift = 32;
+    uint pre = 0;
+    uint cnt = 0;
+    for(int i = 0; i < count; i++)
+    {
+        if(i==infor[inf * 3 + 1])
+        {
+            res = decode_gamma(encode, p, shift);
+            inf++;
+        }
+        else
+            res = pre + decode_gamma(encode, p, shift);
+
+        pre = res;
+        if(res == data[i])
+            cnt++;
+        else{
+            cout << "There is something wrong with " << i << endl;
             break;
         }
     }
-    if(flag == 0) {
-        start = infor[(infor[0] - 1) * 3 + 1];
-        p = infor[(infor[0] - 1) * 3 + 2];
-        shift = infor[(infor[0] - 1) * 3 + 3];
-    }
-
-    uint res = 0;
-    for(int i = start; i < index ; i++) {
-        res += decode_gamma(encode, p, shift);
-    }
-    return res;
 }
+
+// uint decode_data_piece(uint *encode, uint *infor, uint index) {
+//     uint start = 0, flag = 0, p, shift;
+//     for(int i = 0; i <  infor[0] - 1; i++) {
+//         if((infor[i*3+1] <= index - 1)&& (index - 1 < infor[(i+1)*3+1])) {
+//             flag = 1;
+//             start = infor[i * 3 + 1];
+//             p = infor[i * 3 + 2];
+//             shift = infor[i * 3 + 3];
+//             break;
+//         }
+//     }
+//     if(flag == 0) {
+//         start = infor[(infor[0] - 1) * 3 + 1];
+//         p = infor[(infor[0] - 1) * 3 + 2];
+//         shift = infor[(infor[0] - 1) * 3 + 3];
+//     }
+
+//     uint res = 0;
+//     for(int i = start; i < index ; i++) {
+//         res += decode_gamma(encode, p, shift);
+//     }
+//     return res;
+// }
